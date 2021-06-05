@@ -6,7 +6,7 @@ import {
   HTTPResponse,
   ResponseForRequest,
 } from 'puppeteer';
-import {Link, Store, getStores} from './model';
+import {Link, Store, getStores, Item} from './model';
 import {Print, logger} from '../logger';
 import {Selector, getPrice, pageIncludesLabels} from './includes-labels';
 import {
@@ -319,32 +319,40 @@ async function lookupIem(
     return statusCode;
   }
 
-  if (await isItemInStock(store, page, link)) {
-    const givenUrl =
-      link.cartUrl && config.store.autoAddToCart ? link.cartUrl : link.url;
-    logger.info(`${Print.inStock(link, store, true)}\n${givenUrl}`);
+  const items =
+    store.resolveItems !== undefined
+      ? await store.resolveItems(store, page, link)
+      : [undefined];
+  for (const item of items) {
+    if (await isItemInStock(store, page, link, item)) {
+      const givenUrl =
+        link.cartUrl && config.store.autoAddToCart ? link.cartUrl : link.url;
+      logger.info(
+        `${Print.inStock(link, store, true, false, item)}\n${givenUrl}`
+      );
 
-    if (config.browser.open) {
-      await (link.openCartAction === undefined
-        ? open(givenUrl)
-        : link.openCartAction(browser));
-    }
+      if (config.browser.open) {
+        await (link.openCartAction === undefined
+          ? open(givenUrl)
+          : link.openCartAction(browser));
+      }
 
-    sendNotification(link, store);
+      sendNotification(link, store, item);
 
-    if (config.page.inStockWaitTime) {
-      inStock[link.url] = true;
+      if (config.page.inStockWaitTime) {
+        inStock[link.url] = true;
 
-      setTimeout(() => {
-        inStock[link.url] = false;
-      }, 1000 * config.page.inStockWaitTime);
-    }
+        setTimeout(() => {
+          inStock[link.url] = false;
+        }, 1000 * config.page.inStockWaitTime);
+      }
 
-    if (config.page.screenshot) {
-      logger.debug('ℹ saving screenshot');
+      if (config.page.screenshot) {
+        logger.debug('ℹ saving screenshot');
 
-      link.screenshot = `success-${Date.now()}.png`;
-      await page.screenshot({path: link.screenshot});
+        link.screenshot = `success-${Date.now()}.png`;
+        await page.screenshot({path: link.screenshot});
+      }
     }
   }
 
@@ -421,8 +429,19 @@ async function checkIsCloudflare(store: Store, page: Page, link: Link) {
 async function isItemInStock(
   store: Store,
   page: Page,
-  link: Link
+  link: Link,
+  item?: Item
 ): Promise<boolean> {
+  if (item !== undefined) {
+    if (item.inStock) {
+      // Logging for this case happens up the call stack for some reason
+      return true;
+    } else {
+      logger.info(Print.outOfStock(link, store, true, item));
+      return false;
+    }
+  }
+
   const baseOptions: Selector = {
     requireVisible: false,
     selector: store.labels.container ?? 'body',

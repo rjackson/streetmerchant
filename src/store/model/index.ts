@@ -155,6 +155,7 @@ import {WellsTechnology} from './wellstechnology';
 import {Wipoid} from './wipoid';
 import {Xbox} from './xbox';
 import {Zotac} from './zotac';
+import {Wiggle} from './wiggle';
 import {logger} from '../../logger';
 import chalk from 'chalk';
 
@@ -314,6 +315,7 @@ export const storeList = new Map([
   [Wipoid.name, Wipoid],
   [Xbox.name, Xbox],
   [Zotac.name, Zotac],
+  [Wiggle.name, Wiggle],
 ]);
 
 const brands = new Set();

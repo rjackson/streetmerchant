@@ -1,4 +1,4 @@
-import {Link, Store} from '../store/model';
+import {Item, Link, Store} from '../store/model';
 import {adjustPhilipsHueLights} from './philips-hue';
 import {playSound} from './sound';
 import {sendApns} from './apns';
@@ -21,7 +21,7 @@ import {sendStreamLabsAlert} from './streamlabs';
 import {sendFreeMobileAlert} from './freemobile';
 import {DMPayload} from '.';
 
-export function sendNotification(link: Link, store: Store) {
+export function sendNotification(link: Link, store: Store, item?: Item) {
   // Priority
   playSound();
   sendDiscordMessage(link, store);

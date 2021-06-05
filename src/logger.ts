@@ -1,4 +1,4 @@
-import {Link, Store} from './store/model';
+import {Item, Link, Store} from './store/model';
 import chalk from 'chalk';
 import {config} from './config';
 import winston from 'winston';
@@ -107,8 +107,19 @@ export const Print = {
 
     return `✖ ${buildProductString(link, store)} :: CLOUDFLARE, WAITING`;
   },
-  inStock(link: Link, store: Store, color?: boolean, sms?: boolean): string {
-    const productString = `${buildProductString(link, store)} :: IN STOCK`;
+  inStock(
+    link: Link,
+    store: Store,
+    color?: boolean,
+    sms?: boolean,
+    item?: Item
+  ): string {
+    const productString = `${buildProductString(
+      link,
+      store,
+      true,
+      item
+    )} :: IN STOCK`;
 
     if (color) {
       return chalk.bgGreen.white.bold(`🚀🚨 ${productString} 🚨🚀`);
@@ -182,17 +193,17 @@ export const Print = {
 
     return `✖ ${buildProductString(link, store)} :: NO RESPONSE`;
   },
-  outOfStock(link: Link, store: Store, color?: boolean): string {
+  outOfStock(link: Link, store: Store, color?: boolean, item?: Item): string {
     if (color) {
       return (
         '✖ ' +
-        buildProductString(link, store, true) +
+        buildProductString(link, store, true, item) +
         ' :: ' +
         chalk.red('OUT OF STOCK')
       );
     }
 
-    return `✖ ${buildProductString(link, store)} :: OUT OF STOCK`;
+    return `✖ ${buildProductString(link, store, false, item)} :: OUT OF STOCK`;
   },
   productInStock(link: Link): string {
     let productString = `Product Page: ${link.url}`;
@@ -241,27 +252,36 @@ function buildSetupString(
   return `[${store.name}] [setup (${topic})]`;
 }
 
-function buildProductString(link: Link, store: Store, color?: boolean): string {
+function buildProductString(
+  link: Link,
+  store: Store,
+  color?: boolean,
+  item?: Item
+): string {
   if (color) {
     if (store.currentProxyIndex !== undefined && store.proxyList) {
       const proxy = `${store.currentProxyIndex + 1}/${store.proxyList.length}`;
       return (
         chalk.gray(`[${proxy}]`) +
         chalk.cyan(` [${store.name}]`) +
-        chalk.grey(` [${link.brand} (${link.series})] ${link.model}`)
+        chalk.grey(
+          ` [${link.brand} (${link.series})] ${link.model} ${item?.title}`
+        )
       );
     } else {
       return (
         chalk.cyan(`[${store.name}]`) +
-        chalk.grey(` [${link.brand} (${link.series})] ${link.model}`)
+        chalk.grey(
+          ` [${link.brand} (${link.series})] ${link.model} ${item?.title}`
+        )
       );
     }
   }
 
   if (store.currentProxyIndex !== undefined && store.proxyList) {
     const proxy = `${store.currentProxyIndex + 1}/${store.proxyList.length}`;
-    return `[${proxy}] [${store.name}] [${link.brand} (${link.series})] ${link.model}`;
+    return `[${proxy}] [${store.name}] [${link.brand} (${link.series})] ${link.model} ${item?.title}`;
   } else {
-    return `[${store.name}] [${link.brand} (${link.series})] ${link.model}`;
+    return `[${store.name}] [${link.brand} (${link.series})] ${link.model} ${item?.title}`;
   }
 }

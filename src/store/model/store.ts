@@ -1,4 +1,4 @@
-import {Browser, PuppeteerLifeCycleEvent} from 'puppeteer';
+import {Browser, Page, PuppeteerLifeCycleEvent} from 'puppeteer';
 
 export type Element = {
   container?: string;
@@ -274,4 +274,26 @@ export type Store = {
   proxyList?: string[];
   currentProxyIndex?: number;
   captchaDeterrent?: CaptchaDeterrent;
+
+  /**
+   * If this shop's product pages could represent multiple SKUs, write a custom
+   * function to resolve them here.
+   *
+   * If not set, we will treat the entire Link as if it were a single product.
+   */
+  resolveItems?: (
+    store: Store,
+    page: Page,
+    link: Link
+  ) => Promise<(Item | undefined)[]>;
+};
+
+export type Item = {
+  brand: string;
+  series: string;
+  model: string;
+  sku: string;
+  price: string | number | null;
+  inStock: boolean;
+  title: string;
 };
